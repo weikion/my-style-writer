@@ -22,10 +22,10 @@ agent_created: true
 
 ## 目录结构
 
-所有文件均位于技能目录内部，无需在外部维护：
+所有文件均位于技能目录内部，无需在外部维护。下文提到的「技能目录」均指 SKILL.md 所在目录，安装位置不限（用户级或项目级均可）：
 
 ```
-~/.workbuddy/skills/my-style-writer/    ← 本技能根目录
+my-style-writer/                        ← 本技能根目录（SKILL.md 所在目录）
 ├── SKILL.md                            ← 当前文件
 ├── scripts/
 │   └── analyze_style.py                ← 风格分析脚本
@@ -37,8 +37,6 @@ agent_created: true
 │   └── wechat-template.html            ← 默认模板
 └── assets/                             ← 技能资产（备用）
 ```
-
-> 技能根目录路径：`~/.workbuddy/skills/my-style-writer/`
 
 ## 工作流程
 

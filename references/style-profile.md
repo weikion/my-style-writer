@@ -9,7 +9,7 @@
 - 主要发布平台：公众号
 
 ## 风格定位
-[尚未分析——请先将 Markdown 文章放入 `~/.workbuddy/article-library/`，然后执行风格分析。]
+[尚未分析——请先将 Markdown 文章放入技能目录下的 `article-library/`，然后执行风格分析。]
 
 ## 用词偏好
 - 高频词汇：-

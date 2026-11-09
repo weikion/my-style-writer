@@ -2,11 +2,16 @@
 """
 文章风格分析脚本 — 扫描 Markdown 文章库，提取写作风格特征。
 
-用法（在技能根目录下运行）:
-  python scripts/analyze_style.py article-library/ references/style-profile.md
+用法:
+  python scripts/analyze_style.py <文章库目录> <输出风格档案路径> [作者笔名] [发布平台]
 
 - 文章库目录：技能目录下的 article-library/
 - 输出路径：技能目录下的 references/style-profile.md
+- 作者笔名（可选）：用于检测「用笔名自称」的风格特征，如「山哥」
+- 发布平台（可选）：默认「公众号」，可传「知乎」「头条」等
+
+示例（在技能根目录下运行）:
+  python scripts/analyze_style.py article-library/ references/style-profile.md 山哥 公众号
 """
 
 import sys
@@ -245,25 +250,34 @@ def analyze_structure(text: str) -> dict:
     }
 
 
-def analyze_person_usage(text: str) -> dict:
-    """分析人称使用"""
+def analyze_person_usage(text: str, pen_name: str = "") -> dict:
+    """分析人称使用。pen_name：作者笔名，用于检测「用笔名自称」特征"""
     first_person = text.count("我") + text.count("我们")
     second_person = text.count("你") + text.count("你们")
     # 避免重复计算"大家"
     collective = text.count("大家") + text.count("各位") + text.count("读者")
 
     total = first_person + second_person + collective
+
+    # 笔名检测：优先使用传入的笔名，再兜底通用称谓（不写死任何具体人名）
+    name_patterns = [p for p in (pen_name, "笔者", "我本人") if p]
+    if name_patterns:
+        name_re = "|".join(re.escape(p) for p in name_patterns)
+        self_ref_style = "用笔名自称" if re.search(name_re, text) else "用「我」自称"
+    else:
+        self_ref_style = "用「我」自称"
+
     return {
         "first_person_count": first_person,
         "second_person_count": second_person,
         "collective_count": collective,
         "dominant_person": "第一人称为主" if first_person > second_person else "第二人称为主",
-        "self_reference_style": "用笔名自称" if re.search(r'(山哥|笔者|我本人)', text) else "用「我」自称",
+        "self_reference_style": self_ref_style,
     }
 
 
-def generate_style_report(all_analyses: list[dict], articles: list[dict]) -> str:
-    """生成 Markdown 格式的风格档案"""
+def generate_style_report(all_analyses: list[dict], articles: list[dict], platform: str = "公众号") -> str:
+    """生成 Markdown 格式的风格档案。platform：主要发布平台，默认「公众号」"""
     now = datetime.now().strftime("%Y-%m-%d %H:%M")
 
     # 汇总分析结果
@@ -273,7 +287,7 @@ def generate_style_report(all_analyses: list[dict], articles: list[dict]) -> str
 - 作者笔名：待填写
 - 分析文章数：{len(articles)}
 - 分析日期：{now}
-- 主要发布平台：公众号
+- 主要发布平台：{platform}
 
 ## 风格定位
 [基于分析自动推断，建议人工确认]
@@ -447,7 +461,7 @@ def _format_structure(analyses: list[dict]) -> str:
     return "\n".join(lines)
 
 
-def analyze_single_article(article: dict) -> dict:
+def analyze_single_article(article: dict, pen_name: str = "") -> dict:
     """分析单篇文章"""
     body = extract_body_text(article)
     if len(body) < 100:
@@ -462,17 +476,19 @@ def analyze_single_article(article: dict) -> dict:
         "paragraphs": analyze_paragraph_rhythm(article["lines"]),
         "emoji": analyze_emoji_usage(body),
         "structure": analyze_structure(body),
-        "person_usage": analyze_person_usage(body),
+        "person_usage": analyze_person_usage(body, pen_name),
     }
 
 
 def main():
     if len(sys.argv) < 3:
-        print("用法: python scripts/analyze_style.py article-library/ references/style-profile.md")
+        print("用法: python scripts/analyze_style.py <文章库目录> <输出风格档案路径> [作者笔名] [发布平台]")
         sys.exit(1)
 
     article_dir = sys.argv[1]
     output_path = sys.argv[2]
+    pen_name = sys.argv[3] if len(sys.argv) > 3 else ""
+    platform = sys.argv[4] if len(sys.argv) > 4 else "公众号"
 
     print("=" * 50)
     print("  文章风格分析器")
@@ -491,7 +507,7 @@ def main():
     all_analyses = []
     for article in articles:
         print(f"  分析: {article['filename']}...")
-        result = analyze_single_article(article)
+        result = analyze_single_article(article, pen_name)
         if result:
             all_analyses.append(result)
             print(f"    → 正文 {result['body_length']} 字，平均句长 {result['sentences'].get('avg_length', 'N/A')} 字")
@@ -502,7 +518,7 @@ def main():
 
     # 3. 生成风格档案
     print("\n📝 生成风格档案...")
-    report = generate_style_report(all_analyses, articles)
+    report = generate_style_report(all_analyses, articles, platform)
 
     output_file = Path(output_path)
     output_file.parent.mkdir(parents=True, exist_ok=True)

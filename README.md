@@ -87,10 +87,14 @@ my-style-writer/
 
 技能会扫描文章库，运行 `scripts/analyze_style.py` 做定量统计，再结合定性阅读生成风格档案。
 
-也可以手动运行脚本：
+也可以手动运行脚本（支持可选的笔名与发布平台参数）：
 
 ```bash
+# 基础用法
 python scripts/analyze_style.py article-library/ references/style-profile.md
+
+# 指定笔名与发布平台（笔名用于检测「用笔名自称」的风格特征）
+python scripts/analyze_style.py article-library/ references/style-profile.md 山哥 公众号
 ```
 
 ### 第三步：替身写作
@@ -118,6 +122,9 @@ python scripts/analyze_style.py article-library/ references/style-profile.md
 | `{{二级标题}}` | 章节标题 |
 | `{{正文段落内容}}` | 正文段落 |
 | `{{引用内容}}` / `{{出处}}` | 引用块 |
+| `{{公众号口号}}` | 底部一句话口号 |
+| `{{关注引导语}}` | 二维码下方引导文案 |
+| `{{免责声明}}` | 底部免责声明 |
 | `{{二维码图片地址}}` | 关注二维码 |
 
 自定义模板只需把 HTML 文件放入 `templates/` 目录，保留占位符即可被识别。
